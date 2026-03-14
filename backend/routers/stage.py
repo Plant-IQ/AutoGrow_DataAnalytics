@@ -1,13 +1,16 @@
 from fastapi import APIRouter
 
+from models import StageResponse
+
 router = APIRouter()
 
-@router.get("/")
+
+@router.get(
+    "/",
+    response_model=StageResponse,
+    summary="Current growth stage",
+    description="Returns current stage index/name and days elapsed in stage (mocked until live logic is wired).",
+)
 def get_stage():
-    return {
-        "stage_index": 0,
-        "name": "Germination",
-        "day_elapsed": 0,
-        "confirmed": False,
-        "next_stage_requirements": "Wait 3 days, check soil moisture"
-    }
+    # TODO: replace with DB/logic
+    return StageResponse(stage=2, label="Vegetative", days_in_stage=5)

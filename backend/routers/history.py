@@ -1,6 +1,28 @@
+from datetime import datetime, timedelta
+
 from fastapi import APIRouter
+
+from models import HistoryResponse, HistoryPoint
+
 router = APIRouter()
 
-@router.get("/")
+
+@router.get(
+    "/",
+    response_model=HistoryResponse,
+    summary="Past week sensor timeline",
+    description="Returns a time-series of sensor readings (mocked hourly points for now).",
+)
 def get_history():
-    return {"events": []}
+    now = datetime.utcnow()
+    pts = [
+        HistoryPoint(
+            ts=now - timedelta(hours=i),
+            soil=40 + i * 0.1,
+            temp=24,
+            humidity=60,
+            light=300,
+        )
+        for i in range(24)
+    ]
+    return HistoryResponse(points=pts)
