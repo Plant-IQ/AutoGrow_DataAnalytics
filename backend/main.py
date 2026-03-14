@@ -1,0 +1,28 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from routers import stage, health, light, harvest, history, pump
+from db.sqlite import init_db
+from mqtt.subscriber import start_subscriber
+
+
+app = FastAPI(title="AutoGrow API", version="1.0.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(stage.router, prefix="/stage", tags=["stage"])
+app.include_router(health.router, prefix="/health", tags=["health"])
+app.include_router(light.router, prefix="/light", tags=["light"])
+app.include_router(harvest.router, prefix="/harvest-eta", tags=["harvest"])
+app.include_router(history.router, prefix="/history", tags=["history"])
+app.include_router(pump.router, prefix="/pump-status", tags=["pump"])
+
+@app.on_event("startup")
+def startup():
+    init_db()
+    start_subscriber()
+

@@ -1,0 +1,47 @@
+# macOS
+.DS_Store
+
+# Node / Next.js
+node_modules/
+.npmrc
+.next/
+.turbo/
+.next-turbo-cache/
+.vercel/
+out/
+.env.local
+.env*.local
+
+# Logs & coverage
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.log
+coverage/
+
+# Python backend
+backend/venv/
+backend/.venv/
+backend/__pycache__/
+backend/**/*.pyc
+backend/.mypy_cache/
+backend/.pytest_cache/
+backend/.ruff_cache/
+backend/.coverage
+backend/.hypothesis/
+backend/.idea/
+backend/.vscode/
+backend/*.db
+backend/**/*.db
+
+# SQLite files at repo root
+*.db
+
+# Editor/OS
+.idea/
+.vscode/
+*.swp
+*.swo
+
