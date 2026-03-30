@@ -33,3 +33,6 @@ class PumpStatusResponse(BaseModel):
     ok: bool
     vibration: float
     last_checked: datetime
+
+class ErrorResponse(BaseModel):
+    detail: str

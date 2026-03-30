@@ -1,6 +1,10 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlmodel import Session
 
-from models import HealthResponse
+from db.sqlite import get_session
+from models import HealthResponse, ErrorResponse
+from services.repo import latest_sensor, latest_stage
+
 
 router = APIRouter()
 
@@ -10,6 +14,26 @@ router = APIRouter()
     response_model=HealthResponse,
     summary="Plant Health Score",
     description="Aggregated 0–100 score combining soil moisture, temperature, humidity, and light compliance. Mocked values until live data arrives.",
+    responses={
+        422: {"model": ErrorResponse, "description": "Validation error"},
+        500: {
+            "model": ErrorResponse,
+            "description": "Internal server error",
+            "content": {"application/json": {"example": {"detail": "Database unavailable"}}},
+        },
+    },
 )
-def get_health():
-    return HealthResponse(score=82.5, components={"soil": 0.8, "temp": 0.9, "humidity": 0.85, "light": 0.75})
+def get_health(session: Session = Depends(get_session)):
+    sensor = latest_sensor(session)
+    stage = latest_stage(session)
+
+    score = 82.5
+    components = {"soil": 0.8, "temp": 0.9, "humidity": 0.85, "light": 0.75}
+
+    if sensor:
+        components["light"] = min(1.0, sensor.lux / 1000) if hasattr(sensor, "lux") else components["light"]
+
+    if stage:
+        score = min(100.0, score + (stage.stage * 1.5))
+
+    return HealthResponse(score=score, components=components)
