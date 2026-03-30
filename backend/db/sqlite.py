@@ -95,3 +95,11 @@ def record_sensor(field: str, value: float) -> None:
         row = SensorReading(**base)
         session.add(row)
         session.commit()
+
+
+def record_sensor_combined(soil: float, temp: float, humidity: float, light: float) -> None:
+    """Store a complete sensor reading from combined ESP32 payload."""
+    with Session(engine) as session:
+        row = SensorReading(soil=soil, temp=temp, humidity=humidity, light=light)
+        session.add(row)
+        session.commit()
