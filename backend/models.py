@@ -35,4 +35,15 @@ class PumpStatusResponse(BaseModel):
     last_checked: datetime
 
 class ErrorResponse(BaseModel):
+<<<<<<< HEAD
     detail: str
+=======
+    detail: str
+
+
+class ObservationCreate(BaseModel):
+    height_cm: float
+    leaf_count: int
+    root_visible: bool
+    canopy_score: int
+>>>>>>> bb67116 (feat: add MQTT-driven sensor persistence and UI dashboard)

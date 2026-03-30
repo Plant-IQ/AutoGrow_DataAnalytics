@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import stage, health, light, harvest, history, pump
+from routers import stage, health, light, harvest, history, pump, observations
 from db.sqlite import init_db
 from mqtt.subscriber import start_subscriber
 
@@ -20,9 +20,9 @@ app.include_router(light.router, prefix="/light", tags=["light"])
 app.include_router(harvest.router, prefix="/harvest-eta", tags=["harvest"])
 app.include_router(history.router, prefix="/history", tags=["history"])
 app.include_router(pump.router, prefix="/pump-status", tags=["pump"])
+app.include_router(observations.router, prefix="/observations", tags=["observations"])
 
 @app.on_event("startup")
 def startup():
     init_db()
     start_subscriber()
-

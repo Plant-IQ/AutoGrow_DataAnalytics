@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Optional
 
 from dotenv import load_dotenv
-from sqlmodel import Field, Session, SQLModel, create_engine
+from sqlmodel import Field, Session, SQLModel, create_engine, select
 
 load_dotenv()
 
@@ -70,3 +70,28 @@ def get_session():
 
     with Session(engine) as session:
         yield session
+
+
+def record_sensor(field: str, value: float) -> None:
+    """Store a sensor reading, carrying forward last known values for other fields.
+
+    This lets us persist single-sensor MQTT updates into the wide SensorReading table
+    without needing all metrics at once.
+    """
+
+    with Session(engine) as session:
+        last = session.exec(select(SensorReading).order_by(SensorReading.ts.desc()).limit(1)).first()
+
+        # Carry forward previous values so history/health stay smooth
+        base = {
+            "soil": last.soil if last else value,
+            "temp": last.temp if last else value,
+            "humidity": last.humidity if last else value,
+            "light": last.light if last else value,
+        }
+        if field in base:
+            base[field] = value
+
+        row = SensorReading(**base)
+        session.add(row)
+        session.commit()

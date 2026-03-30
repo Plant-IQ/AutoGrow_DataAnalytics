@@ -2,18 +2,30 @@
 import useSWR from "swr";
 import { fetcher } from "@/lib/api";
 
+type StageResponse = {
+  stage: number;
+  label: string;
+  days_in_stage: number;
+};
+
 export default function StageCard() {
-  const { data, isLoading } = useSWR("/stage", fetcher, {
+  const { data, isLoading, error } = useSWR<StageResponse>("/stage", fetcher, {
     refreshInterval: 30000,
   });
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <div className="card">Loading stage…</div>;
+  if (error) return <div className="card text-red-600">Failed to load stage</div>;
 
   return (
-    <div className="rounded-xl border p-4">
-      <p className="text-sm text-gray-500">Current stage</p>
-      <p className="text-2xl font-medium">{data?.name}</p>
-      <p className="text-sm text-gray-400">Day {data?.day_elapsed}</p>
+    <div className="card">
+      <p className="label">Current stage</p>
+      <div className="flex items-baseline gap-2">
+        <p className="text-3xl font-semibold">{data?.label ?? "–"}</p>
+        <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">
+          #{data?.stage}
+        </span>
+      </div>
+      <p className="mt-1 text-sm text-slate-500">Day {data?.days_in_stage}</p>
     </div>
   );
 }
