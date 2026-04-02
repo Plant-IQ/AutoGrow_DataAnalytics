@@ -1,0 +1,255 @@
+import asyncio
+from datetime import datetime, timedelta
+from fastapi import APIRouter, Depends, HTTPException
+from sqlmodel import Session, select
+from db.sqlite import PlantType, PlantInstance, get_session, engine
+from models import (
+    PlantTypeIn,
+    PlantTypeOut,
+    PlantInstanceIn,
+    PlantInstanceOut,
+    PlantInstanceUpdate,
+    PlantLightResponse,
+)
+from mqtt.publisher import publish_light_color
+
+router = APIRouter()
+# Separate router to expose top-level /plant-types without inheriting the /plants prefix
+alias_router = APIRouter()
+
+@router.get("/types", response_model=list[PlantTypeOut])
+def list_types(session: Session = Depends(get_session)):
+    return session.exec(select(PlantType)).all()
+
+
+@router.post("/types", response_model=PlantTypeOut)
+def create_type(payload: PlantTypeIn, session: Session = Depends(get_session)):
+    row = PlantType(**payload.model_dump())
+    session.add(row); session.commit(); session.refresh(row)
+    return row
+
+
+@router.patch("/types/{type_id}", response_model=PlantTypeOut)
+def update_type(type_id: int, payload: PlantTypeIn, session: Session = Depends(get_session)):
+    row = session.get(PlantType, type_id)
+    if not row:
+        raise HTTPException(status_code=404, detail="Plant type not found")
+    for k, v in payload.model_dump().items():
+        setattr(row, k, v)
+    session.add(row)
+    session.commit()
+    session.refresh(row)
+    return row
+
+
+@router.delete("/types/{type_id}", status_code=204)
+def delete_type(type_id: int, session: Session = Depends(get_session)):
+    row = session.get(PlantType, type_id)
+    if not row:
+        raise HTTPException(status_code=404, detail="Plant type not found")
+    in_use = session.exec(select(PlantInstance).where(PlantInstance.plant_type_id == type_id)).first()
+    if in_use:
+        raise HTTPException(status_code=400, detail="Cannot delete type; plants are using it.")
+    session.delete(row)
+    session.commit()
+    return
+
+
+@alias_router.get("/plant-types", response_model=list[PlantTypeOut])
+def list_types_alias(session: Session = Depends(get_session)):
+    return list_types(session)
+
+
+@alias_router.post("/plant-types", response_model=PlantTypeOut)
+def create_type_alias(payload: PlantTypeIn, session: Session = Depends(get_session)):
+    return create_type(payload, session)
+
+
+@router.get("/", response_model=list[PlantInstanceOut])
+def list_plants(session: Session = Depends(get_session)):
+    plants = session.exec(select(PlantInstance)).all()
+    updated = False
+    for p in plants:
+        pt = session.get(PlantType, p.plant_type_id)
+        if pt:
+            updated |= _refresh_pending(p, pt, session)
+    if updated:
+        session.commit()
+        # reload to reflect any pending flag changes
+        plants = session.exec(select(PlantInstance)).all()
+    return plants
+
+
+@router.patch("/{plant_id}", response_model=PlantInstanceOut)
+def update_plant(plant_id: int, payload: PlantInstanceUpdate, session: Session = Depends(get_session)):
+    plant = session.get(PlantInstance, plant_id)
+    if not plant:
+        raise HTTPException(status_code=404, detail="Plant not found")
+
+    data = payload.model_dump(exclude_unset=True)
+    if "plant_type_id" in data and not session.get(PlantType, data["plant_type_id"]):
+        raise HTTPException(status_code=400, detail="Unknown plant_type_id")
+
+    for k, v in data.items():
+        setattr(plant, k, v)
+
+    session.add(plant)
+    session.commit()
+    session.refresh(plant)
+    return plant
+
+
+@router.delete("/{plant_id}", status_code=204)
+def delete_plant(plant_id: int, session: Session = Depends(get_session)):
+    plant = session.get(PlantInstance, plant_id)
+    if not plant:
+        raise HTTPException(status_code=404, detail="Plant not found")
+    session.delete(plant)
+    session.commit()
+    return
+
+@router.post("/", response_model=PlantInstanceOut)
+def create_plant(payload: PlantInstanceIn, session: Session = Depends(get_session)):
+    if not session.get(PlantType, payload.plant_type_id):
+        raise HTTPException(status_code=400, detail="Unknown plant_type_id")
+    data = payload.model_dump()
+    if data["stage_started_at"] is None:
+        data["stage_started_at"] = datetime.utcnow()
+    row = PlantInstance(**data)
+    session.add(row); session.commit(); session.refresh(row)
+    return row
+
+
+def _get_color_for_stage(plant: PlantInstance, plant_type: PlantType) -> str:
+    # Clamp stage index to last known color
+    idx = min(plant.current_stage_index, len(plant_type.stage_colors) - 1)
+    return plant_type.stage_colors[idx]
+
+
+def _refresh_pending(plant: PlantInstance, plant_type: PlantType, session: Session) -> bool:
+    """Update pending_confirm based on elapsed time in current stage.
+
+    Returns True if the object was mutated.
+    """
+    durations = plant_type.stage_durations_days
+    if not durations:
+        return False
+
+    idx = min(plant.current_stage_index, len(durations) - 1)
+
+    # If already at or beyond the final stage, clear pending if it was set.
+    if idx >= len(durations) - 1:
+        if plant.pending_confirm:
+            plant.pending_confirm = False
+            session.add(plant)
+            return True
+        return False
+
+    target_days = durations[idx]
+    elapsed = datetime.utcnow() - plant.stage_started_at
+    should_pending = elapsed >= timedelta(days=target_days)
+
+    if plant.pending_confirm != should_pending:
+        plant.pending_confirm = should_pending
+        session.add(plant)
+        return True
+
+    return False
+
+
+@router.get("/{plant_id}/light", response_model=PlantLightResponse)
+def get_plant_light(plant_id: int, session: Session = Depends(get_session)):
+    plant = session.get(PlantInstance, plant_id)
+    if not plant:
+        raise HTTPException(status_code=404, detail="Plant not found")
+    plant_type = session.get(PlantType, plant.plant_type_id)
+    if not plant_type:
+        raise HTTPException(status_code=400, detail="Plant type missing for this plant")
+
+    _refresh_pending(plant, plant_type, session)
+    session.commit()
+    session.refresh(plant)
+
+    color = _get_color_for_stage(plant, plant_type)
+    return PlantLightResponse(
+        plant_id=plant.id,
+        stage=plant.current_stage_index,
+        color=color,
+        pending_confirm=plant.pending_confirm,
+    )
+
+
+@router.post("/{plant_id}/confirm-transition", response_model=PlantInstanceOut)
+def confirm_transition(plant_id: int, session: Session = Depends(get_session)):
+    plant = session.get(PlantInstance, plant_id)
+    if not plant:
+        raise HTTPException(status_code=404, detail="Plant not found")
+
+    plant_type = session.get(PlantType, plant.plant_type_id)
+    if not plant_type:
+        raise HTTPException(status_code=400, detail="Plant type missing for this plant")
+
+    max_stage = max(0, len(plant_type.stage_durations_days) - 1)
+    # If already at final stage, just clear pending flag
+    if plant.current_stage_index < max_stage:
+        plant.current_stage_index += 1
+    plant.stage_started_at = datetime.utcnow()
+    plant.pending_confirm = False
+
+    session.add(plant)
+    session.commit()
+    session.refresh(plant)
+
+    # Publish new light color to MQTT (best effort)
+    try:
+        publish_light_color(plant.id, _get_color_for_stage(plant, plant_type))
+    except Exception as e:
+        print(f"[MQTT] publish error after confirm: {e}")
+
+    return plant
+
+
+def _refresh_all_pending():
+    with Session(engine) as session:
+        plants = session.exec(select(PlantInstance)).all()
+        changed = False
+        for p in plants:
+            pt = session.get(PlantType, p.plant_type_id)
+            if pt:
+                changed |= _refresh_pending(p, pt, session)
+        if changed:
+            session.commit()
+        # Publish current color for all non-pending plants
+        for p in plants:
+            pt = session.get(PlantType, p.plant_type_id)
+            if pt and not p.pending_confirm:
+                try:
+                    publish_light_color(p.id, _get_color_for_stage(p, pt))
+                except Exception as e:
+                    print(f"[MQTT] publish error during refresh: {e}")
+
+
+async def _pending_refresher_loop(interval_seconds: int = 600):
+    while True:
+        try:
+            _refresh_all_pending()
+        except Exception as e:
+            print(f"[Plants] pending refresh error: {e}")
+        await asyncio.sleep(interval_seconds)
+
+
+def start_pending_refresher():
+    try:
+        loop = asyncio.get_event_loop()
+        loop.create_task(_pending_refresher_loop())
+        print("[Plants] Pending refresher started (10 min cadence).")
+    except RuntimeError:
+        print("[Plants] Could not start pending refresher (no event loop).")
+
+
+def sync_plants_now():
+    """One-shot refresh + publish, useful at startup."""
+    try:
+        _refresh_all_pending()
+    except Exception as e:
+        print(f"[Plants] sync_plants_now error: {e}")

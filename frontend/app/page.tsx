@@ -4,6 +4,7 @@ import ObsForm from "@/components/ObsForm";
 import PumpStatus from "@/components/PumpStatus";
 import SensorChart from "@/components/SensorChart";
 import StageCard from "@/components/StageCard";
+import PlantLight from "@/components/PlantLight";
 
 export default function Home() {
   return (
@@ -21,10 +22,11 @@ export default function Home() {
       </header>
 
       <main className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-8">
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-4">
           <StageCard />
           <HarvestETA />
           <PumpStatus />
+          <PlantLight />
         </div>
 
         <div className="grid gap-4 lg:grid-cols-3">

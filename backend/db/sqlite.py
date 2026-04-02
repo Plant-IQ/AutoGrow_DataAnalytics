@@ -5,12 +5,14 @@ from pathlib import Path
 from typing import Optional
 
 from dotenv import load_dotenv
+from sqlalchemy import Column, JSON
 from sqlmodel import Field, Session, SQLModel, create_engine, select
 
 load_dotenv()
 
-# Allow overriding via env; default lives alongside backend code
-DB_PATH = os.getenv("SQLITE_PATH", "./autogrow.db")
+# Make DB path stable no matter the working directory (defaults to backend/autogrow.db)
+BASE_DIR = Path(__file__).resolve().parent.parent
+DB_PATH = Path(os.getenv("SQLITE_PATH", BASE_DIR / "autogrow.db"))
 engine = create_engine(f"sqlite:///{DB_PATH}", connect_args={"check_same_thread": False})
 
 
@@ -52,6 +54,26 @@ class WeatherCache(SQLModel, table=True):
     key: str = Field(primary_key=True)
     ts: datetime = Field(default_factory=datetime.utcnow, index=True)
     payload: str  # store raw JSON string
+
+
+class PlantType(SQLModel, table=True):
+    """Type of plant being grown."""
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str
+    stage_durations_days: list[int] = Field(sa_column=Column(JSON))
+    stage_colors: list[str] = Field(sa_column=Column(JSON)) # hex strings
+
+
+class PlantInstance(SQLModel, table=True):
+    """Instance of a plant type, e.g. 'Cucumber 1'."""
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    label: str
+    plant_type_id: int = Field(foreign_key="planttype.id")
+    current_stage_index: int = 0
+    stage_started_at: datetime = Field(default_factory=datetime.utcnow)
+    pending_confirm: bool = False 
 
 
 def init_db() -> None:
@@ -103,3 +125,4 @@ def record_sensor_combined(soil: float, temp: float, humidity: float, light: flo
         row = SensorReading(soil=soil, temp=temp, humidity=humidity, light=light)
         session.add(row)
         session.commit()
+

@@ -1,7 +1,9 @@
 from datetime import datetime
 from typing import List
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
+
+ALLOWED_STAGE_COLORS = ["#4DA6FF", "#FFFFFF", "#FF6FA3"]  # blue, white, pink/red
 
 
 class StageResponse(BaseModel):
@@ -52,3 +54,58 @@ class ObservationCreate(BaseModel):
     leaf_count: int
     root_visible: bool
     canopy_score: int
+
+
+class PlantTypeIn(BaseModel):
+    name: str
+    stage_durations_days: List[int]
+    stage_colors: List[str]
+
+    @model_validator(mode="after")
+    def enforce_three_stage_palette(self):
+        # Exactly three stages: seed/early (blue), veg (white), bloom/fruit (pink/red)
+        if len(self.stage_durations_days) != 3:
+            raise ValueError("stage_durations_days must have exactly 3 entries (seed, veg, bloom).")
+        if any(d <= 0 for d in self.stage_durations_days):
+            raise ValueError("stage_durations_days values must be positive integers.")
+
+        colors = [c.upper() for c in self.stage_colors]
+        if len(colors) != 3:
+            raise ValueError("stage_colors must have exactly 3 entries (blue, white, pink/red).")
+        if any(c not in ALLOWED_STAGE_COLORS for c in colors):
+            raise ValueError(f"stage_colors must be one of {ALLOWED_STAGE_COLORS}.")
+
+        # Normalize to uppercase to keep DB consistent
+        self.stage_colors = colors
+        return self
+
+
+class PlantTypeOut(PlantTypeIn):
+    id: int
+
+
+class PlantInstanceIn(BaseModel):
+    label: str
+    plant_type_id: int
+    current_stage_index: int = 0
+    stage_started_at: datetime | None = None
+
+
+class PlantInstanceOut(PlantInstanceIn):
+    id: int
+    pending_confirm: bool
+
+
+class PlantInstanceUpdate(BaseModel):
+    label: str | None = None
+    plant_type_id: int | None = None
+    current_stage_index: int | None = None
+    stage_started_at: datetime | None = None
+    pending_confirm: bool | None = None
+
+
+class PlantLightResponse(BaseModel):
+    plant_id: int
+    stage: int
+    color: str
+    pending_confirm: bool
