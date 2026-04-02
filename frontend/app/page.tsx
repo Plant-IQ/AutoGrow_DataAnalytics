@@ -13,7 +13,7 @@ export default function Home() {
       <header className="border-b border-slate-200/70 bg-white backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
-            <Image src="/assets/logos/AutoGrow.png" alt="AutoGrow logo" width={150} height={50} priority />
+            <Image src="/assets/logos/AutoGrow.png" alt="AutoGrow logo" width={180} height={60} priority />
             <div className="h-10 w-px bg-slate-200" />
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Dashboard</p>

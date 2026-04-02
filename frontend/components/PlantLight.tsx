@@ -35,6 +35,13 @@ export default function PlantLight() {
   const isLoading = loadingPlants || loadingLight;
   const hasError = plantsError || lightError;
 
+  // Force a consistent palette: Seed → Blue, Veg → Warm White, Bloom → Red
+  const palette = ["#6fb2d2", "#F5E6C5", "#cb6a7e"];
+  const tone = light
+    ? palette[Math.min(light.stage, palette.length - 1)] ?? light.color
+    : palette[0];
+  const toneLabel = light?.stage === 0 ? "Blue" : light?.stage === 1 ? "Warm white" : "Red";
+
   async function handleConfirm() {
     if (!activePlant) return;
     await postJson(`/plants/${activePlant.id}/confirm-transition`, {});
@@ -55,11 +62,16 @@ export default function PlantLight() {
         <span className="text-xs text-slate-500">{activePlant.label}</span>
       </div>
       <div className="flex items-center gap-3">
-        <span className="h-12 w-12 rounded-full border border-[color:var(--brand-primary)]/30 shadow-inner" style={{ background: light.color }} />
+        <span
+          className="h-12 w-12 rounded-full border border-[color:var(--brand-primary)]/30 shadow-inner"
+          style={{ background: tone }}
+        />
         <div>
           <p className="text-sm text-slate-500">Current color</p>
-          <p className="text-lg font-semibold">{light.color}</p>
-          <p className="text-xs text-slate-500">Stage: {stageLabel}</p>
+          <p className="text-lg font-semibold">{tone}</p>
+          <p className="text-xs text-slate-500">
+            Stage: {stageLabel} · {toneLabel}
+          </p>
         </div>
       </div>
 
