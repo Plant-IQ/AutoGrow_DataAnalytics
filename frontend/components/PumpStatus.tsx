@@ -1,6 +1,7 @@
 "use client";
 import useSWR from "swr";
 import { fetcher } from "@/lib/api";
+import Image from "next/image";
 
 type PumpResponse = {
   ok: boolean;
@@ -19,7 +20,14 @@ export default function PumpStatus() {
   const last = new Date(data.last_checked).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
   return (
-    <div className="card">
+    <div className="card relative">
+      <Image
+        src="/assets/icons/water_drop.png"
+        alt="Water drop"
+        width={48}
+        height={48}
+        className="absolute right-3 top-3 h-12 w-12 opacity-90"
+      />
       <div className="flex items-center gap-2">
         <span
           className={`h-3 w-3 rounded-full ${data.ok ? "bg-[color:var(--brand-secondary)] shadow-[0_0_0_6px_rgba(133,200,138,0.25)]" : "bg-red-500"}`}

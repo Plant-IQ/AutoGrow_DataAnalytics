@@ -3,9 +3,9 @@ import HealthGauge from "@/components/HealthGauge";
 import ObsForm from "@/components/ObsForm";
 import PumpStatus from "@/components/PumpStatus";
 import SensorChart from "@/components/SensorChart";
-import StageCard from "@/components/StageCard";
 import PlantLight from "@/components/PlantLight";
 import Image from "next/image";
+import GrowthStatus from "@/components/GrowthStatus";
 
 export default function Home() {
   return (
@@ -30,8 +30,9 @@ export default function Home() {
 
       <main className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-8">
         <div className="grid gap-4 md:grid-cols-4">
-          <StageCard />
-          <HarvestETA />
+          <div className="md:col-span-2">
+            <GrowthStatus />
+          </div>
           <PumpStatus />
           <PlantLight />
         </div>
