@@ -29,6 +29,16 @@ def _record_combined_sensor(payload: dict):
     light = light_raw if light_raw is not None else payload.get("light")
     vibr = payload.get("vibration")
 
+    # ── field ใหม่จาก ESP32 ──────────────────────────────────
+    stage         = payload.get("stage")
+    stage_name    = payload.get("stage_name")
+    spectrum      = payload.get("spectrum")
+    pump_on       = payload.get("pump_on")
+    pump_status   = payload.get("pump_status")
+    light_hrs     = payload.get("light_hrs_today")
+    harvest_eta   = payload.get("harvest_eta_days")
+    health_score  = payload.get("health_score")
+
     try:
         temp_val = (float(temp1) + float(temp2)) / 2 if (temp1 and temp2) else float(temp1 or temp2 or 0)
         record_sensor_combined(
@@ -36,17 +46,32 @@ def _record_combined_sensor(payload: dict):
             temp=temp_val,
             humidity=float(humidity) if humidity is not None else 0.0,
             light=float(light) if light is not None else 0.0,
+            # ── เพิ่มเข้าไป ──
+            stage=int(stage) if stage is not None else 0,
+            stage_name=stage_name or "",
+            spectrum=spectrum or "",
+            pump_on=bool(pump_on),
+            pump_status=pump_status or "",
+            light_hrs_today=float(light_hrs) if light_hrs is not None else 0.0,
+            harvest_eta_days=int(harvest_eta) if harvest_eta is not None else 0,
+            health_score=int(health_score) if health_score is not None else 0,
         )
-        print(f"[MQTT] SQLite saved: soil={soil} temp={temp_val} humidity={humidity} light={light}")
+        print(f"[MQTT] SQLite saved: stage={stage_name} soil={soil} temp={temp_val} health={health_score}")
     except Exception as e:
         print(f"[MQTT] SQLite combined record error: {e}")
 
     if vibr is not None:
         try:
             write_sensor("pump", "vibration", float(vibr))
+            # เพิ่ม field อื่นใน InfluxDB ด้วย
+            if stage is not None:
+                write_sensor("autogrow", "stage", float(stage))
+            if health_score is not None:
+                write_sensor("autogrow", "health_score", float(health_score))
+            if harvest_eta is not None:
+                write_sensor("autogrow", "harvest_eta_days", float(harvest_eta))
         except Exception as e:
-            print(f"[MQTT] vibration record error: {e}")
-
+            print(f"[MQTT] InfluxDB record error: {e}")
 
 def on_message(client, userdata, msg):
     topic = msg.topic

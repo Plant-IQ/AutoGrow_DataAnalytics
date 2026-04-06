@@ -8,6 +8,10 @@ from dotenv import load_dotenv
 from sqlalchemy import Column, JSON
 from sqlmodel import Field, Session, SQLModel, create_engine, select
 
+from datetime import datetime, timezone, timedelta
+
+ICT = timezone(timedelta(hours=7))
+
 load_dotenv()
 
 # Make DB path stable no matter the working directory (defaults to backend/autogrow.db)
@@ -31,11 +35,21 @@ class SensorReading(SQLModel, table=True):
     """Time-series of sensor data; can be downsampled later."""
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    ts: datetime = Field(default_factory=datetime.utcnow, index=True)
+    ts: datetime = Field(default_factory=lambda: datetime.now(ICT), index=True)
     soil: float
     temp: float
     humidity: float
     light: float
+    # ── field ใหม่จาก ESP32 ──
+    stage: int = Field(default=0)
+    stage_name: str = Field(default="")
+    spectrum: str = Field(default="")
+    pump_on: bool = Field(default=False)
+    pump_status: str = Field(default="")
+    light_hrs_today: float = Field(default=0.0)
+    harvest_eta_days: int = Field(default=0)
+    health_score: int = Field(default=0)
+
 
 
 class GrowthStage(SQLModel, table=True):
@@ -119,10 +133,36 @@ def record_sensor(field: str, value: float) -> None:
         session.commit()
 
 
-def record_sensor_combined(soil: float, temp: float, humidity: float, light: float) -> None:
+def record_sensor_combined(
+    soil: float,
+    temp: float,
+    humidity: float,
+    light: float,
+    stage: int = 0,
+    stage_name: str = "",
+    spectrum: str = "",
+    pump_on: bool = False,
+    pump_status: str = "",
+    light_hrs_today: float = 0.0,
+    harvest_eta_days: int = 0,
+    health_score: int = 0,
+) -> None:
     """Store a complete sensor reading from combined ESP32 payload."""
     with Session(engine) as session:
-        row = SensorReading(soil=soil, temp=temp, humidity=humidity, light=light)
+        row = SensorReading(
+            soil=soil,
+            temp=temp,
+            humidity=humidity,
+            light=light,
+            stage=stage,
+            stage_name=stage_name,
+            spectrum=spectrum,
+            pump_on=pump_on,
+            pump_status=pump_status,
+            light_hrs_today=light_hrs_today,
+            harvest_eta_days=harvest_eta_days,
+            health_score=health_score,
+        )
         session.add(row)
         session.commit()
 

@@ -33,6 +33,14 @@ class HistoryPoint(BaseModel):
     temp: float
     humidity: float
     light: float
+    stage: int = 0
+    stage_name: str = ""
+    spectrum: str = ""
+    pump_on: bool = False
+    pump_status: str = ""
+    light_hrs_today: float = 0.0
+    harvest_eta_days: int = 0
+    health_score: int = 0
 
 
 class HistoryResponse(BaseModel):
