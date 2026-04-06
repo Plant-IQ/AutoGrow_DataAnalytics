@@ -109,8 +109,6 @@ def on_message(client, userdata, msg):
 
 
 def start_subscriber():
-    """Start MQTT listener or short-circuit if hardware/broker is not ready."""
-
     broker = os.getenv("MQTT_BROKER")
     port = os.getenv("MQTT_PORT")
 
@@ -119,19 +117,29 @@ def start_subscriber():
         return
 
     try:
-        client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+        import random
+        client = mqtt.Client(
+            mqtt.CallbackAPIVersion.VERSION2,
+            client_id=f"autogrow_backend_{random.randint(1000,9999)}"
+        )
         client.on_message = on_message
+
+        # ── เพิ่ม on_connect เพื่อ subscribe หลัง connect สำเร็จ ──
+        def on_connect(client, userdata, flags, rc, props=None):
+            print(f"[MQTT] Connected rc={rc}")
+            for topic in TOPICS:
+                client.subscribe(topic)
+            client.subscribe("+/autogrow/sensors")
+            print(f"[MQTT] Subscribed to all topics")
+
+        client.on_connect = on_connect
+
         mqtt_user = os.getenv("MQTT_USER")
         mqtt_pass = os.getenv("MQTT_PASS")
         if mqtt_user and mqtt_pass:
             client.username_pw_set(mqtt_user, mqtt_pass)
 
         client.connect(broker, int(port))
-
-        for topic in TOPICS:
-            client.subscribe(topic)
-        client.subscribe("+/autogrow/sensors")  # subscribe dynamic user-topic prefix
-
         client.loop_start()
         print(f"[MQTT] Subscriber started on {broker}:{port}")
     except Exception as e:
