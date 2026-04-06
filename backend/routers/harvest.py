@@ -30,17 +30,14 @@
 #     )
 
 from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends
-from sqlmodel import Session, select
+from fastapi import APIRouter
 from models import HarvestETAResponse, ErrorResponse
-from db.sqlite import get_session, SensorReading
 
 router = APIRouter()
 
 @router.get("/", response_model=HarvestETAResponse)
-def get_harvest_eta(session: Session = Depends(get_session)):
-    latest = session.exec(select(SensorReading).order_by(SensorReading.ts.desc()).limit(1)).first()
-    days = latest.harvest_eta_days if latest and latest.harvest_eta_days else 35
+def get_harvest_eta():
+    days = 18
     return HarvestETAResponse(
         days_to_harvest=days,
         projected_date=datetime.utcnow() + timedelta(days=days),
