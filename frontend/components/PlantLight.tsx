@@ -37,9 +37,7 @@ export default function PlantLight() {
 
   // Force a consistent palette: Seed → Blue, Veg → Warm White, Bloom → Red
   const palette = ["#6fb2d2", "#F5E6C5", "#cb6a7e"];
-  const tone = light
-    ? palette[Math.min(light.stage, palette.length - 1)] ?? light.color
-    : palette[0];
+  const tone = light ? palette[Math.min(light.stage, palette.length - 1)] ?? light.color : palette[0];
   const toneLabel = light?.stage === 0 ? "Blue" : light?.stage === 1 ? "Warm white" : "Red";
 
   async function handleConfirm() {
@@ -53,40 +51,34 @@ export default function PlantLight() {
   if (!activePlant) return <div className="card">No plants defined yet.</div>;
   if (!light) return <div className="card text-red-600">Light data missing</div>;
 
-  const stageLabel = ["Seed", "Veg", "Bloom"][Math.min(light.stage, 2)] ?? `Stage ${light.stage}`;
-
   return (
-    <div className="card gap-3">
-      <div className="flex items-center justify-between">
-        <p className="label">Light program</p>
-        <span className="text-xs text-slate-500">{activePlant.label}</span>
+    <div className="card relative">
+      <span
+        className="h-14 w-14 rounded-full border-2 border-black shadow-inner absolute right-3 top-3"
+        style={{ background: tone }}
+      />
+
+      <div className="mb-1">
+        <p className="label">Light Status</p>
       </div>
-      <div className="flex items-center gap-3">
-        <span
-          className="h-12 w-12 rounded-full border border-[color:var(--brand-primary)]/30 shadow-inner"
-          style={{ background: tone }}
-        />
-        <div>
-          <p className="text-sm text-slate-500">Current color</p>
-          <p className="text-lg font-semibold">{tone}</p>
-          <p className="text-xs text-slate-500">
-            Stage: {stageLabel} · {toneLabel}
-          </p>
-        </div>
+
+      <div className="space-y-0.5">
+        <p className="text-sm text-slate-500 leading-tight">Color</p>
+        <p className="text-2xl font-semibold leading-tight">{toneLabel}</p>
       </div>
 
       {light.pending_confirm ? (
-        <div className="flex items-center justify-between gap-3 rounded-lg bg-amber-50 px-3 py-2 text-amber-800">
+        <div className="mt-2 flex items-center justify-between gap-3 rounded-lg bg-amber-50 px-3 py-2 text-amber-800">
           <div>
-            <p className="text-sm font-medium">Stage change pending</p>
-            <p className="text-xs">Confirm to advance and update the light color.</p>
+            <p className="text-sm font-medium">Change pending</p>
+            <p className="text-xs">Confirm to apply the next light color.</p>
           </div>
           <button className="btn !px-3 !py-2 !text-sm" onClick={handleConfirm}>
-            Confirm stage
+            Confirm
           </button>
         </div>
       ) : (
-        <p className="text-sm text-emerald-700">Stage synced · no confirmation needed</p>
+        <p className="text-sm text-emerald-700">Synced · no confirmation needed</p>
       )}
     </div>
   );

@@ -29,13 +29,16 @@ export default function Home() {
       </header>
 
       <main className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-8">
-        <div className="grid gap-4 md:grid-cols-4">
-          <div className="md:col-span-2">
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="md:col-span-2 h-full">
             <GrowthStatus />
           </div>
-          <PumpStatus />
-          <PlantLight />
+          <div className="grid gap-4">
+            <PumpStatus />
+            <PlantLight />
+          </div>
         </div>
+
 
         <div className="grid gap-4 lg:grid-cols-3">
           <HealthGauge />

@@ -12,6 +12,11 @@ class StageResponse(BaseModel):
     days_in_stage: int
 
 
+class StageUpdate(BaseModel):
+    stage: int
+    label: str
+
+
 class HealthResponse(BaseModel):
     score: float
     components: dict  # e.g., {"soil": 0.8, "temp": 0.9}

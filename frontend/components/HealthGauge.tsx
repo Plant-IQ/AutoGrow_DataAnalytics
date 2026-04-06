@@ -51,8 +51,8 @@ export default function HealthGauge() {
           />
           <defs>
             <linearGradient id="healthGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#85c88a" />
-              <stop offset="100%" stopColor="#6fb2d2" />
+              <stop offset="0%" stopColor="#6fb2d2" />
+              <stop offset="100%" stopColor="#85c78a" />
             </linearGradient>
           </defs>
         </svg>

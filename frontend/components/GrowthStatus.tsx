@@ -1,7 +1,8 @@
 "use client";
 import Image from "next/image";
-import useSWR from "swr";
-import { fetcher } from "@/lib/api";
+import useSWR, { mutate } from "swr";
+import { useState, FormEvent } from "react";
+import { fetcher, postJson } from "@/lib/api";
 
 type StageResponse = {
   stage: number;
@@ -22,6 +23,14 @@ const ICONS = [
 ];
 
 export default function GrowthStatus() {
+  const [showForm, setShowForm] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [name, setName] = useState("");
+  const [seedDays, setSeedDays] = useState(7);
+  const [vegDays, setVegDays] = useState(21);
+  const [bloomDays, setBloomDays] = useState(28);
+
   const { data: stage, isLoading: stageLoading, error: stageError } = useSWR<StageResponse>("/stage", fetcher, {
     refreshInterval: 30000,
   });
@@ -44,7 +53,7 @@ export default function GrowthStatus() {
     day: "numeric",
   });
 
-  // Normalize progress: prefer label mapping, fallback to index.
+  // Normalize progress and icon by label; fallback to index.
   const labelLower = stageName.toLowerCase();
   let progress = 0; // 0=seed, 0.5=veg, 1=bloom
   if (labelLower.includes("seed") || labelLower.includes("germ")) {
@@ -57,43 +66,122 @@ export default function GrowthStatus() {
     icon = ICONS[2];
     progress = 1;
   } else {
-    // fallback to index position
     progress = Math.min(idx / 2, 1);
   }
   const percent = Math.round(progress * 100);
 
+  async function handleHarvest(e: FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    setMessage(null);
+    try {
+      await postJson("/stage/reset", {});
+      const typeRes = await postJson("/plant-types", {
+        name: name || "New plant",
+        stage_durations_days: [seedDays, vegDays, bloomDays],
+        stage_colors: ["#4DA6FF", "#FFFFFF", "#FF6FA3"],
+      });
+      if (!typeRes.ok) throw new Error("Failed to save plant type");
+      const type = await typeRes.json();
+      const plantRes = await postJson("/plants/", { label: name || "New plant", plant_type_id: type.id });
+      if (!plantRes.ok) throw new Error("Failed to create plant");
+
+      mutate("/stage");
+      mutate("/plants/");
+      setMessage("Harvested and started new grow");
+      setShowForm(false);
+      setName("");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Could not harvest/start";
+      setMessage(msg);
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
-    <div className="card">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="label">Growth status</p>
-          <p className="text-3xl font-semibold">{stageName}</p>
-          <p className="text-sm text-slate-500">Day {stage.days_in_stage}</p>
+    <div className="status-frame h-full">
+      <div className="status-card h-full" style={{ minHeight: "100px" }}>
+        <div className="status-header">
+          <span className="day-label">Day</span>
+          <div className="status-divider" aria-hidden />
+          <span className="status-eyebrow">Growth status</span>
+          <Image src={icon} alt={stageName} width={88} height={88} className="status-icon" priority />
+          <span className="day-number">{stage.days_in_stage}</span>
+          <p className="status-title" style={{ marginTop: "-4px" }}>
+            {stageName}
+          </p>
         </div>
-        <Image src={icon} alt={stageName} width={56} height={56} className="w-14 h-auto object-contain" priority />
-      </div>
 
-      <div className="mt-4 space-y-2">
-        <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
-          <span>Seed</span>
-          <span>Veg</span>
-          <span>Bloom</span>
+        <div className="status-progress mt-auto">
+          <div className="status-steps">
+            <span>Seed</span>
+            <span>Veg</span>
+            <span>Bloom</span>
+          </div>
+          <div className="status-bar">
+            <div className="status-bar-fill" style={{ width: `${percent}%` }} />
+          </div>
+          <div className="status-meta mt-2">
+            <span>
+              {harvest.days_to_harvest} days to harvest · {projected}
+            </span>
+            {!showForm && (
+              <button className="status-harvest-btn" onClick={() => setShowForm(true)}>
+                Harvest
+              </button>
+            )}
+          </div>
         </div>
-        <div className="relative h-4 rounded-full bg-slate-200">
-          <div
-            className="absolute inset-y-0 left-0 rounded-full"
-            style={{
-              width: `${percent}%`,
-              background: "linear-gradient(90deg, var(--brand-primary), var(--brand-secondary))",
-            }}
-          />
-        </div>
-        <div className="flex items-center justify-end text-sm text-slate-600">
-          <span>
-            {harvest.days_to_harvest} days to harvest · {projected}
-          </span>
-        </div>
+
+        {showForm && (
+          <form className="status-form" onSubmit={handleHarvest}>
+            <div className="grid grid-cols-1 gap-2">
+              <label className="field">
+                <span>Next plant name</span>
+                <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g., Basil" />
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                <label className="field">
+                  <span>Seed days</span>
+                  <input
+                    type="number"
+                    min={1}
+                    value={seedDays}
+                    onChange={(e) => setSeedDays(parseInt(e.target.value) || 1)}
+                  />
+                </label>
+                <label className="field">
+                  <span>Veg days</span>
+                  <input
+                    type="number"
+                    min={1}
+                    value={vegDays}
+                    onChange={(e) => setVegDays(parseInt(e.target.value) || 1)}
+                  />
+                </label>
+                <label className="field">
+                  <span>Bloom days</span>
+                  <input
+                    type="number"
+                    min={1}
+                    value={bloomDays}
+                    onChange={(e) => setBloomDays(parseInt(e.target.value) || 1)}
+                  />
+                </label>
+              </div>
+            </div>
+            <div className="status-form-actions">
+              <button type="submit" className="status-harvest-btn" disabled={saving}>
+                {saving ? "Saving…" : "Harvest & start"}
+              </button>
+              <button type="button" className="status-secondary-btn" onClick={() => setShowForm(false)} disabled={saving}>
+                Cancel
+              </button>
+            </div>
+            {message && <p className="status-message">{message}</p>}
+          </form>
+        )}
       </div>
     </div>
   );
