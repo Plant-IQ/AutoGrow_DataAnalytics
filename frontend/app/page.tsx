@@ -47,15 +47,8 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4">
           <ObsForm />
-          <div className="card">
-            <p className="label">Notes</p>
-            <p className="text-sm text-slate-600">
-              Use this panel during class to demo how you collected data. Screen-share or bring your laptop and
-              walk through sensor setup, sampling cadence, and any issues you hit so we can troubleshoot together.
-            </p>
-          </div>
         </div>
       </main>
     </div>
