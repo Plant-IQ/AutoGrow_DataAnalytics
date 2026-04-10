@@ -164,7 +164,7 @@ export default function GrowthStatus() {
           <span className="day-label">Day</span>
           <div className="status-divider" aria-hidden />
           <span className="status-eyebrow">Growth status</span>
-          <Image src={icon} alt={stageName} width={88} height={88} className="status-icon" priority />
+          {hasActive && <Image src={icon} alt={stageName} width={88} height={88} className="status-icon" priority />}
           <span className="day-number">{hasActive ? stageSafe.days_in_stage : "-"}</span>
           <p className="status-title" style={{ marginTop: "-4px" }}>
             {stageName}
