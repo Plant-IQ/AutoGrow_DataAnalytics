@@ -33,6 +33,7 @@ backend/.coverage
 backend/.hypothesis/
 backend/.idea/
 backend/.vscode/
+backend/.env
 backend/*.db
 backend/**/*.db
 
@@ -44,4 +45,3 @@ backend/**/*.db
 .vscode/
 *.swp
 *.swo
-
