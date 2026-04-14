@@ -1,4 +1,3 @@
-
 from datetime import datetime, timedelta
 from db.sqlite import engine, SensorReading, PlantType, PlantTypeTarget, init_db
 from sqlmodel import Session, select
