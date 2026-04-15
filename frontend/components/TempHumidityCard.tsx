@@ -28,13 +28,13 @@ export default function TempHumidityCard() {
 
   return (
     <div className="card space-y-2">
-      <p className="label">Temp & Humidity</p>
-      <div className="grid grid-cols-2 gap-2 text-sm">
-        <div className="rounded-lg bg-slate-50 px-3 py-2">
+      <p className="label">Glasshouse Temperature & Humidity</p>
+      <div className="grid grid-cols-1 gap-2 text-sm">
+        <div className="rounded-lg bg-[#E8F4E8] px-3 py-2">
           <p className="text-xs uppercase tracking-wide text-slate-500">Temperature</p>
           <p className="text-xl font-semibold text-slate-900">{tempLabel}</p>
         </div>
-        <div className="rounded-lg bg-slate-50 px-3 py-2">
+        <div className="rounded-lg bg-[#E2EFF6] px-3 py-2">
           <p className="text-xs uppercase tracking-wide text-slate-500">Humidity</p>
           <p className="text-xl font-semibold text-slate-900">{humidityLabel}</p>
         </div>

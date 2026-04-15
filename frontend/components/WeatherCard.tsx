@@ -32,7 +32,7 @@ export default function WeatherCard() {
 
   return (
     <div className="card space-y-3">
-      <p className="label">Outdoor</p>
+      <p className="label">Outdoor data from external source </p>
       <div className="grid grid-cols-2 gap-2 text-sm">
         <div className="border-black border- rounded-lg bg-[#85c78a]/20 px-3 py-2">
           <p className="text-xs uppercase tracking-wide text-slate-500">Temp</p>

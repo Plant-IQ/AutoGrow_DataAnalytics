@@ -36,13 +36,17 @@ export default function Home() {
           <WeatherCard />
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-3 items-stretch">
           <PumpStatus />
-          <PlantLight />
-          <TempHumidityCard />
-          <div className="md:col-span-2 lg:col-span-3">
-            <SensorChart />
+          <div className="md:col-span-2 grid grid-cols-3 gap-4">
+          <div className="col-span-2 h-full">
+            <PlantLight />
           </div>
+            <TempHumidityCard />
+          </div>
+        <div className="md:col-span-3">
+          <SensorChart />
+        </div>
         </div>
 
         <div className="grid gap-4">
