@@ -48,19 +48,30 @@ export default function PumpStatus() {
       </div>
 
       <div className="grid gap-2">
-        <div className="rounded-xl border border-slate-200 bg-white/55 px-3 py-2">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Pump vibration</p>
-          <p className="text-3xl font-semibold text-slate-900 leading-tight">{data.vibration.toFixed(2)}</p>
-          <p className="mt-1 text-xs text-slate-500">Sensor KY-002 · MQTT /autogrow/sensors</p>
+        <div className="rounded-xl border border-slate-200 bg-[#c4c7cd]/20 px-3 py-2">
+          <div className="flex items-end justify-between gap-1">
+            <div>
+              <p className="text-xs uppercase tracking-wide text-slate-500">Pump vibration</p>
+              <p className="text-3xl font-semibold text-slate-900 leading-tight">{data.vibration.toFixed(2)}</p>
+              <p className="mt-1 text-xs text-slate-500">Sensor KY-002 · MQTT /autogrow/sensors</p>
+            </div>
+            <Image
+              src="/assets/icons/pump.png"
+              alt="Pump"
+              width={52}
+              height={52}
+              className="h-14 w-14 self-end object-contain opacity-95"
+            />
+          </div>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white/55 px-3 py-2">
+        <div className="rounded-xl border border-slate-200 bg-[#6fb2d2]/20 px-3 py-2">
           <div className="flex items-end justify-between">
             <p className="text-xs uppercase tracking-wide text-slate-500">Soil moisture</p>
             <p className="text-2xl font-semibold text-slate-900 leading-tight">{soilLabel}</p>
           </div>
           <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-200">
-            <div className="h-full rounded-full bg-emerald-500" style={{ width: `${soilPct}%` }} />
+            <div className="h-full rounded-full bg-[#6fb2d2]" style={{ width: `${soilPct}%` }} />
           </div>
           <p className="mt-1 text-xs text-slate-500">Sensor ZX-SOIL (ADC) · MQTT /autogrow/sensors</p>
         </div>
