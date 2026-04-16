@@ -1,12 +1,12 @@
 """Stage lookup helper."""
 
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Tuple
 
 from sqlmodel import Session, select
 
-from db.sqlite import GrowthStage
+from db.sqlite import GrowthStage, PlantInstance, engine
 from mqtt.publisher import publish_stage_update
 
 DEFAULT_STAGE = (2, "Vegetative")
@@ -39,21 +39,41 @@ def upsert_stage(session: Session, stage_index: int, stage_name: str):
     session.commit()
 
 
-# MQTT stage scheduler
+def _update_plant_stage(plant_id: int, stage: int) -> None:
+    """Update current_stage_index in DB so dashboard reflects the new stage."""
+    with Session(engine) as session:
+        plant = session.get(PlantInstance, plant_id)
+        if plant:
+            plant.current_stage_index = stage
+            plant.stage_started_at = datetime.utcnow()
+            session.add(plant)
+            session.commit()
+
+
 async def schedule_stage_transitions(
     plant_id: int,
+    started_at: datetime,
     seed_days: int,
     veg_days: int,
     bloom_days: int,
 ) -> None:
-    """
-    state 0 → ส่งทันทีตอน start (เรียกจาก router)
-    state 1 → หลังครบ seed_days  (เข้า Veg)
-    state 2 → หลังครบ veg_days   (เข้า Bloom)
-    """
-    await asyncio.sleep(seed_days * 86400)
+    now = datetime.utcnow()
+
+    veg_start = started_at + timedelta(days=seed_days)
+    bloom_start = started_at + timedelta(days=seed_days + veg_days)
+
+    wait_veg = (veg_start - now).total_seconds()
+    if wait_veg > 0:
+        await asyncio.sleep(wait_veg)
+    _update_plant_stage(plant_id, 1)
     publish_stage_update(plant_id, 1)
+    print(f"[Stage] plant_id={plant_id} → stage 1 (Veg)")
 
     if bloom_days > 0:
-        await asyncio.sleep(veg_days * 86400)
+        wait_bloom = (bloom_start - now).total_seconds()
+        remaining = wait_bloom - max(0, wait_veg)
+        if remaining > 0:
+            await asyncio.sleep(remaining)
+        _update_plant_stage(plant_id, 2)
         publish_stage_update(plant_id, 2)
+        print(f"[Stage] plant_id={plant_id} → stage 2 (Bloom)")
