@@ -14,7 +14,7 @@ export const fetcher = async (path: string) => {
       return inlineMock(path);
     }
     return data;
-  } catch (err) {
+  } catch {
     return inlineMock(path);
   }
 };
@@ -31,7 +31,7 @@ export const postJson = async (path: string, body: unknown) => {
     const res = await doPost(REAL_BASE);
     if (res.ok) return res;
     throw new Error(`${res.status}`);
-  } catch (err) {
+  } catch {
     return inlineMockResponse(path, body);
   }
 };
@@ -43,12 +43,18 @@ export const DEFAULT_LON = process.env.NEXT_PUBLIC_DEFAULT_LON ?? "100.5018";
 
 // If the real API returns "empty" responses that hide UI panels, fall back to mock data.
 function shouldFallback(path: string, data: unknown): boolean {
+  const payload = data as {
+    points?: unknown[];
+    score?: number;
+    components?: Record<string, unknown>;
+  } | null;
+
   if (path === "/plants/active") return data == null;
   if (path === "/stage" || path === "/harvest-eta") return data == null;
-  if (path === "/history") return Array.isArray((data as any)?.points) && (data as any).points.length === 0;
+  if (path === "/history") return Array.isArray(payload?.points) && payload.points.length === 0;
   if (path === "/health") {
-    const score = (data as any)?.score;
-    const components = (data as any)?.components;
+    const score = payload?.score;
+    const components = payload?.components;
     const emptyComponents = components && Object.keys(components).length === 0;
     return data == null || score == null || score <= 0 || emptyComponents;
   }
@@ -56,7 +62,7 @@ function shouldFallback(path: string, data: unknown): boolean {
 }
 
 // Inline mock payloads so we don't depend on API routes when backend is absent.
-function inlineMock(path: string): any {
+function inlineMock(path: string): unknown {
   const now = Date.now();
   const plant = {
     id: 1,
@@ -92,7 +98,7 @@ function inlineMock(path: string): any {
     };
   });
 
-  const map: Record<string, any> = {
+  const map: Record<string, unknown> = {
     "/plants/active": plant,
     "/plants": [plant],
     "/stage": { stage: 1, label: "Veg", days_in_stage: 8 },
@@ -124,7 +130,7 @@ function inlineMock(path: string): any {
   return { ok: true, mock: true, path };
 }
 
-function inlineMockResponse(path: string, body: any): Response {
+function inlineMockResponse(path: string, body: unknown): Response {
   if (path === "/plants/start") {
     const res = inlineMock("/plants/active");
     return new Response(JSON.stringify(res), { status: 201, headers: { "Content-Type": "application/json" } });
@@ -132,12 +138,6 @@ function inlineMockResponse(path: string, body: any): Response {
   if (path === "/stage/reset" || path === "/plants/harvest-active" || path.includes("/confirm-transition")) {
     return new Response(JSON.stringify({ ok: true, mock: true }), {
       status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
-  if (path === "/observations") {
-    return new Response(JSON.stringify({ ok: true, mock: true }), {
-      status: 201,
       headers: { "Content-Type": "application/json" },
     });
   }

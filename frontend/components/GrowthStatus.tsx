@@ -19,7 +19,7 @@ type WeatherContext = {
 };
 
 const STAGE_LABELS = ["Seed", "Veg", "Bloom"];
-const ICONS = ["/assets/icons/state_seed_2.png", "/assets/icons/state_veg.png", "/assets/icons/state_bloom.png"];
+const ICONS = ["/assets/icons/state_seed.png", "/assets/icons/state_veg.png", "/assets/icons/state_bloom.png"];
 export default function GrowthStatus() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);

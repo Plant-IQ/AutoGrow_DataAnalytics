@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "AutoGrow Dashboard",
-  description: "Monitor grow stages, health, and manual observations",
+  description: "Monitor grow stages and greenhouse health",
 };
 
 export default function RootLayout({

@@ -26,7 +26,7 @@ npm install
 npm run dev:mock
 ```
 
-This starts Next.js and serves mock endpoints at `/api/mock`. The UI will show a seeded active plant, sensor history, pump/light status, and accepts POSTs for observations/harvest/start without a real device.
+This starts Next.js and serves mock endpoints at `/api/mock`. The UI will show a seeded active plant, sensor history, pump/light status, and accepts POSTs for harvest/start without a real device.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 

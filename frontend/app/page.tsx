@@ -1,9 +1,8 @@
-import ObsForm from "@/components/ObsForm";
-import PumpStatus from "@/components/PumpStatus";
+import PumpStatus from "@/components/IrrigationMonitor";
 import SensorChart from "@/components/SensorChart";
-import PlantLight from "@/components/PlantLight";
-import TempHumidityCard from "@/components/TempHumidityCard";
-import WeatherCard from "@/components/WeatherCard";
+import PlantLight from "@/components/LightStatus";
+import TempHumidityCard from "@/components/GlasshouseCard";
+import WeatherCard from "@/components/OutdoorDataCard";
 import Image from "next/image";
 import GrowthStatus from "@/components/GrowthStatus";
 
@@ -33,24 +32,19 @@ export default function Home() {
           <div className="h-full">
             <GrowthStatus />
           </div>
-          <ObsForm />
+          <div className="h-full">
+            <PlantLight />
+          </div>
         </div>
 
-        <div className="grid items-stretch gap-4 md:grid-cols-3">
+        <div className="grid items-stretch gap-4 md:grid-cols-[1.35fr_0.85fr_1fr]">
           <PumpStatus />
-          <div className="grid grid-cols-3 gap-4 md:col-span-2">
-            <div className="col-span-2 h-full">
-              <PlantLight />
-            </div>
-            <TempHumidityCard />
-          </div>
+          <TempHumidityCard />
+          <WeatherCard />
         </div>
 
-        <div className="grid items-stretch gap-4 md:grid-cols-3">
-          <WeatherCard />
-          <div className="md:col-span-2">
-            <SensorChart />
-          </div>
+        <div className="grid items-stretch gap-4 md:grid-cols-1">
+          <SensorChart />
         </div>
       </main>
     </div>

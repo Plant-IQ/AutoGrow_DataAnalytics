@@ -53,7 +53,7 @@ export default function PumpStatus() {
             <div>
               <p className="text-xs uppercase tracking-wide text-slate-500">Pump vibration</p>
               <p className="text-3xl font-semibold text-slate-900 leading-tight">{data.vibration.toFixed(2)}</p>
-              <p className="mt-1 text-xs text-slate-500">Sensor KY-002 · MQTT /autogrow/sensors</p>
+              <p className="mt-1 text-xs text-slate-500">collected via KY-002</p>
             </div>
             <Image
               src="/assets/icons/pump.png"
@@ -73,12 +73,12 @@ export default function PumpStatus() {
           <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-200">
             <div className="h-full rounded-full bg-[#6fb2d2]" style={{ width: `${soilPct}%` }} />
           </div>
-          <p className="mt-1 text-xs text-slate-500">Sensor ZX-SOIL (ADC) · MQTT /autogrow/sensors</p>
+          <p className="mt-1 text-xs text-slate-500">collected via ZX-SOIL (ADC)</p>
         </div>
       </div>
 
       <div className="mt-auto">
-        <p className="text-xs text-slate-500">Last checked {last}</p>
+        <p className="text-right text-xs text-slate-500">Last checked {last}</p>
       </div>
     </div>
   );

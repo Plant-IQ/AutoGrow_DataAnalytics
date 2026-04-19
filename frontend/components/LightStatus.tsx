@@ -81,6 +81,10 @@ export default function PlantLight() {
     spectrum.includes("white") ? spectrumColors.white :
     spectrum === "red"   ? spectrumColors.red   :
     spectrumColors.off;
+  const lightStatusLabel = hasLiveLight ? "Auto-sync" : "Light idle";
+  const lightStatusTone = hasLiveLight
+    ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+    : "bg-slate-100 text-slate-700 border border-slate-200";
 
   if (hasError) return <div className="card text-red-600">Light status unavailable</div>;
   if (isLoading) return <div className="card">Loading light status…</div>;
@@ -89,14 +93,16 @@ export default function PlantLight() {
 
   return (
     <div className="card relative h-full">
-      <Image
-        src={lightVisual.icon}
-        alt={`${lightVisual.label} lamp`}
-        width={64}
-        height={64}
-        className="absolute right-4 -top-0.5 h-20 w-20 object-contain"
-        priority
-      />
+      <div className="absolute right-3 top-3 flex items-center gap-2">
+        <Image
+          src={lightVisual.icon}
+          alt={`${lightVisual.label} lamp`}
+          width={32}
+          height={32}
+          className="h-8 w-8 object-contain"
+        />
+        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${lightStatusTone}`}>{lightStatusLabel}</span>
+      </div>
 
       <div className="mb-1">
         <p className="label">Light Status</p>
@@ -110,12 +116,9 @@ export default function PlantLight() {
       <div className={`mt-2 rounded-lg ${boxColor} px-3 py-2`}>
         <p className="text-xs uppercase tracking-wide text-slate-500">Light intensity (KY-018)</p>
         <p className="text-xl font-semibold text-slate-900">{luxLabel}</p>
-        <p className="mt-1 text-xs text-slate-500">Collected via KY-018 (LDR ADC) + MQTT /autogrow/sensors</p>
+        <p className="mt-1 text-xs text-slate-500">collected via KY-018 (LDR ADC)</p>
       </div>
 
-      <p className="mt-2 text-sm text-emerald-700">
-        {hasLiveLight ? "Auto-sync enabled" : "No active light output"}
-      </p>
     </div>
   );
 }

@@ -31,10 +31,10 @@ export default function WeatherCard() {
   const source = data.source ?? "weather service";
 
   return (
-    <div className="card space-y-3">
+    <div className="card space-y-2">
       <p className="label">Outdoor data from external source </p>
       <div className="grid grid-cols-2 gap-2 text-sm">
-        <div className="border-black border- rounded-lg bg-[#85c78a]/20 px-3 py-2">
+        <div className="border-black border- rounded-lg bg-[#FFF0BE]/70 px-3 py-2">
           <p className="text-xs uppercase tracking-wide text-slate-500">Temp</p>
           <p className="font-medium text-slate-800">{temp}</p>
         </div>
@@ -42,22 +42,22 @@ export default function WeatherCard() {
           <p className="text-xs uppercase tracking-wide text-slate-500">Humidity</p>
           <p className="font-medium text-slate-800">{humidity}</p>
         </div>
-        <div className="col-span-2 flex items-center justify-between gap-2 rounded-lg bg-[#ffb88d]/20 px-3 py-2">
+        <div className="col-span-2 flex items-center justify-between gap-2 rounded-lg bg-[#ffb88d]/20 px-3 py-1">
           <div>
             <p className="text-xs uppercase tracking-wide text-slate-500">Sunrise</p>
             <p className="font-medium text-slate-800">{sunrise}</p>
           </div>
           <img src="/assets/icons/sunrise.png" alt="Sunrise" className="h-12 w-12 object-contain ml-auto" />
         </div>
-        <div className="col-span-2 flex items-center justify-between gap-2 rounded-lg bg-[#d78451]/20 px-3 py-2">
+        <div className="col-span-2 flex items-center justify-between gap-2 rounded-lg bg-[#d78451]/20 px-3 py-1">
           <div>
             <p className="text-xs uppercase tracking-wide text-slate-500">Sunset</p>
             <p className="font-medium text-slate-800">{sunset}</p>
           </div>
-          <img src="/assets/icons/sunset.png" alt="Sunrise" className="h-12 w-12 object-contain ml-auto" />
+          <img src="/assets/icons/sunset.png" alt="Sunset" className="h-12 w-12 object-contain ml-auto" />
         </div>
       </div>
-      <p className="text-xs text-slate-500">via {source}</p>
+      <p className="text-right text-xs text-slate-500">via {source}</p>
     </div>
   );
 }

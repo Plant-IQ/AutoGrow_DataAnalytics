@@ -1,6 +1,7 @@
 "use client";
 import useSWR from "swr";
 import { fetcher } from "@/lib/api";
+import Image from "next/image";
 
 type ActivePlant = { id: number };
 type HistoryPoint = {
@@ -27,19 +28,35 @@ export default function TempHumidityCard() {
   const humidityLabel = latest?.humidity !== undefined ? `${latest.humidity.toFixed(0)}% RH` : "N/A";
 
   return (
-    <div className="card space-y-2">
-      <p className="label">Glasshouse Temperature & Humidity</p>
+    <div className="card relative space-y-2">
+      <p className="label">
+        <span className="block">Glasshouse Temp & Humidity</span>
+      </p>
       <div className="grid grid-cols-1 gap-2 text-sm">
-        <div className="rounded-lg bg-[#E8F4E8] px-3 py-2">
+        <div className="relative rounded-lg bg-[#FFF0BE]/70 px-3 py-5">
           <p className="text-xs uppercase tracking-wide text-slate-500">Temperature</p>
-          <p className="text-xl font-semibold text-slate-900">{tempLabel}</p>
+          <p className="text-xl font-semibold text-slate-900 pt-1">{tempLabel}</p>
+          <Image
+            src="/assets/icons/termometer.png"
+            alt="Thermometer"
+            width={18}
+            height={18}
+            className="absolute right-6 top-1/2 -translate-y-1/2 object-contain rotate-[27deg]"
+          />
         </div>
-        <div className="rounded-lg bg-[#E2EFF6] px-3 py-2">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Humidity</p>
-          <p className="text-xl font-semibold text-slate-900">{humidityLabel}</p>
+        <div className="relative rounded-lg bg-[#E2EFF6] px-3 py-5">
+          <Image
+            src="/assets/icons/water_drops.png"
+            alt="Vapor"
+            width={55}
+            height={55}
+            className="absolute left-3 top-1/2 -translate-y-1/2 object-contain"
+          />
+          <p className="text-right text-xs uppercase tracking-wide text-slate-500 pr-1">Humidity</p>
+          <p className="text-right text-xl font-semibold text-slate-900 pt-1 pr-1">{humidityLabel}</p>
         </div>
       </div>
-      <p className="text-xs text-slate-500">Collected via KY-015 (DHT11 x2 avg) + MQTT /autogrow/sensors</p>
+      <p className="absolute bottom-4 right-4 text-xs text-slate-500">collected via KY-015 (DHT11 x2 avg)</p>
     </div>
   );
 }

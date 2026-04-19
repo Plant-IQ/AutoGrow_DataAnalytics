@@ -39,7 +39,7 @@ let activePlant:
   pending_confirm: false,
 };
 
-let plantTypes = [
+const plantTypes = [
   { id: 1, name: "Default 3-stage", stage_durations_days: [7, 21, 30] },
   { id: 2, name: "Leafy quick", stage_durations_days: [5, 14, 0] },
 ];
@@ -50,12 +50,12 @@ let harvest = {
   projected_date: new Date(Date.now() + 22 * 24 * 60 * 60 * 1000).toISOString(),
 };
 
-let health = {
+const health = {
   score: 84,
   components: { water: 0.82, light: 0.9, nutrients: 0.7, airflow: 0.65 },
 };
 
-let pumpStatus = {
+const pumpStatus = {
   ok: true,
   vibration: 0.12,
   last_checked: new Date().toISOString(),
@@ -73,7 +73,7 @@ let plantLight = {
   pending_confirm: false,
 };
 
-let history: HistoryPoint[] = Array.from({ length: 48 }).map((_, i) => {
+const history: HistoryPoint[] = Array.from({ length: 48 }).map((_, i) => {
   const ts = new Date(Date.now() - (47 - i) * 30 * 60 * 1000);
   return {
     ts: ts.toISOString(),
@@ -91,8 +91,6 @@ let history: HistoryPoint[] = Array.from({ length: 48 }).map((_, i) => {
     health_score: health.score,
   };
 });
-
-let observations: any[] = [];
 
 function ok(body: unknown, init: number | ResponseInit = 200) {
   return NextResponse.json(body, typeof init === "number" ? { status: init } : init);
@@ -177,11 +175,6 @@ export async function POST(req: NextRequest, { params }: { params: { slug?: stri
     case "/light": {
       lightTelemetry = { ...lightTelemetry, ...body };
       return ok(lightTelemetry);
-    }
-    case "/observations": {
-      const id = observations.length + 1;
-      observations.push({ id, ...body, ts: new Date().toISOString() });
-      return ok({ id, ok: true }, 201);
     }
     default:
       if (confirmMatch) {
