@@ -45,3 +45,6 @@ backend/**/*.db
 .vscode/
 *.swp
 *.swo
+
+# Local MicroPython secrets
+iot/thonny/kidbright32/config.py
