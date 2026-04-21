@@ -150,7 +150,7 @@ export default function DailyTempHumidityComparisonBarChart() {
       <div className="rounded-2xl border border-[#e2e8f0] bg-[linear-gradient(180deg,#ffffff_0%,#f8fbfd_100%)] p-3 mt-4">
         <div className="h-80 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            {/* ปรับ margin ขอบซ้ายและขวา เพื่อให้มีที่ว่างสำหรับ Label แกน Y */}
+            {/* Adjust left/right margins so Y-axis labels have enough space */}
             <BarChart data={chartData} margin={{ top: 16, right: 20, bottom: 16, left: 16 }} barGap={8}>
               <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
               <XAxis dataKey="dateLabel" stroke="#94a3b8" tick={{ fontSize: 12, fill: "#94a3b8" }} />
@@ -163,7 +163,7 @@ export default function DailyTempHumidityComparisonBarChart() {
                   angle: -90, 
                   position: "insideLeft", 
                   fill: "#94a3b8",
-                  style: { textAnchor: "middle" } // จัดกึ่งกลาง
+                  style: { textAnchor: "middle" } // Center alignment
                 }}
               />
               <YAxis
@@ -176,7 +176,7 @@ export default function DailyTempHumidityComparisonBarChart() {
                   angle: 90, 
                   position: "insideRight", 
                   fill: "#94a3b8",
-                  style: { textAnchor: "middle" } // จัดกึ่งกลาง
+                  style: { textAnchor: "middle" } // Center alignment
                 }}
               />
               <Tooltip content={<CustomTooltip />} />

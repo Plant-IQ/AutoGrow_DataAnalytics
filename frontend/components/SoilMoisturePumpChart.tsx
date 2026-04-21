@@ -139,7 +139,7 @@ export default function SoilMoisturePumpChart() {
           <p className="label">Soil moisture timeline</p>
           <h2 className="text-lg font-semibold text-slate-900">Soil moisture with pump events</h2>
         </div>
-        {/* เปลี่ยนจากข้อความเฉยๆ เป็น สัญลักษณ์เส้นประ + ข้อความ */}
+        {/* Replace plain text with a dashed-line symbol + label */}
         <div className="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500">
           <div className="w-5 border-b-2 border-dashed border-[#dc2626]"></div>
           <span>Pump ON</span>
@@ -148,7 +148,7 @@ export default function SoilMoisturePumpChart() {
 
       <div className="rounded-2xl border border-[#e2e8f0] bg-[linear-gradient(180deg,#ffffff_0%,#f8fbfd_100%)] p-3 mt-4">
         <div className="h-80 w-full">
-          {/* เพิ่ม left margin เป็น 16 เพื่อให้มีที่ว่างสำหรับ Label แกน Y ไม่ให้ชิดขอบเกินไป */}
+          {/* Increase left margin to 16 so the Y-axis label has enough space */}
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={chartData} margin={{ top: 16, right: 20, bottom: 16, left: 16 }}>
               <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
@@ -162,7 +162,7 @@ export default function SoilMoisturePumpChart() {
                   angle: -90, 
                   position: "insideLeft", 
                   fill: "#94a3b8",
-                  style: { textAnchor: "middle" } // บังคับให้อยู่กึ่งกลาง
+                  style: { textAnchor: "middle" } // Force center alignment
                 }}
               />
               <ReferenceLine
@@ -171,7 +171,7 @@ export default function SoilMoisturePumpChart() {
                 strokeDasharray="6 4"
                 label={{ value: "Dry threshold", fill: "#4a8fb0", fontSize: 12, position: "insideTopLeft" }}
               />
-              {/* ลบ Label "Pump ON" ออกจาก ReferenceLine ตรงนี้ */}
+              {/* Remove the "Pump ON" label from the ReferenceLine here */}
               {Array.from(pumpReferenceLabels).map((timeLabel, index) => (
                 <ReferenceLine
                   key={`${timeLabel}-${index}`}

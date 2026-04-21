@@ -21,7 +21,7 @@ SENSOR_TOPIC_SUFFIX = "/autogrow/sensors"
 
 
 def _get_active_stage() -> tuple[int, str]:
-    """ดึง stage จาก DB เสมอ — ไม่เชื่อ ESP32"""
+    """Always read the stage from DB; do not trust ESP32 stage values."""
     with Session(engine) as s:
         active = s.exec(
             select(PlantInstance)
@@ -44,7 +44,7 @@ def _record_combined_sensor(payload: dict):
     light = light_raw if light_raw is not None else payload.get("light")
     vibr = payload.get("vibration")
 
-    # ── stage จาก DB ไม่ใช่จาก ESP32 ──────────────────────────
+    # ── Stage comes from DB, not from ESP32 ─────────────────────
     stage, stage_name = _get_active_stage()
 
     spectrum     = payload.get("spectrum")

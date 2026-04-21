@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlmodel import Session, select
 
-# ดึงทุกอย่างมาจาก db.sqlite ที่เราเตรียมไว้แล้ว
+# Import everything from db.sqlite that this router needs
 from db.sqlite import AutogrowReading, PlantInstance, engine, get_mysql_session
 from models import HistoryResponse, HistoryPoint
 
@@ -12,7 +12,7 @@ def get_history(
     until_stage: str | None = Query(None),
     session: Session = Depends(get_mysql_session),
 ):
-    # คืนค่าว่างเมื่อไม่มี active plant เพื่อไม่ให้ข้อมูล session เก่าปรากฏ
+    # Return empty data when there is no active plant to avoid showing old session records
     with Session(engine) as sqlite_session:
         active = sqlite_session.exec(
             select(PlantInstance)
@@ -23,7 +23,7 @@ def get_history(
     if not active:
         return HistoryResponse(points=[])
 
-    # ดึงข้อมูลจาก MySQL (Autogrow Table)
+    # Read data from MySQL (Autogrow table)
     statement = (
         select(AutogrowReading)
         .where(AutogrowReading.ts >= active.started_at)
@@ -37,7 +37,7 @@ def get_history(
 
     rows = list(results)
 
-    # กรองข้อมูลตาม Stage (ถ้ามี)
+    # Filter data by stage (if requested)
     if until_stage:
         normalized_stage = until_stage.strip().lower()
         cutoff_idx = None

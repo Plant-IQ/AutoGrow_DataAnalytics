@@ -13,7 +13,7 @@ import {
   YAxis,
 } from "recharts";
 
-// แก้ไข 1: เปลี่ยน realFetcher เป็น fetcher (ถ้าใน api.ts ของคุณชื่อ fetcher)
+// Update 1: Use fetcher instead of realFetcher (if your api.ts exports fetcher)
 import { DEFAULT_LAT, DEFAULT_LON, fetcher } from "@/lib/api";
 const MATCH_WINDOW_MS = 90 * 60 * 1000;
 const HISTORY_PATH = "/history?until_stage=Veg";
@@ -57,14 +57,14 @@ function parseTimestamp(row: RawReading): string | null {
 }
 
 function parseValue(row: RawReading, field: string): number | null {
-  // ทำให้ฟังก์ชันฉลาดขึ้น ช่วยหาชื่อคีย์อื่นๆ ที่น่าจะเป็นไปได้ด้วย
+  // Make this parser more flexible by checking other likely key names
   const candidates = [
     row.value, 
     row[field], 
-    row[`${field}1`],            // กรณีเป็น temp1
-    row[`${field}2`],            // กรณีเป็น temp2
-    row[`${field}erature_2m`],   // กรณีเป็น temperature_2m (Open-Meteo)
-    row[`${field}_c`]            // กรณีเป็น temp_c
+    row[`${field}1`],            // Case: temp1
+    row[`${field}2`],            // Case: temp2
+    row[`${field}erature_2m`],   // Case: temperature_2m (Open-Meteo)
+    row[`${field}_c`]            // Case: temp_c
   ];
 
   for (const candidate of candidates) {
@@ -143,7 +143,7 @@ function formatDateTime(ts: string) {
 
 function getTemperatureDomain(points: ScatterPoint[]): [number, number] {
   const values = points.flatMap((point) => [point.outdoorTemp, point.glasshouseTemp]);
-  // แก้ไข 2: เอาเลข 0 ออก เพื่อไม่ให้สเกลเพี้ยนไปเริ่มที่ติดลบ
+  // Update 2: Remove 0 from the min bound to avoid skewing the scale into negatives
   const min = Math.floor(Math.min(...values) - 2);
   const max = Math.ceil(Math.max(...values) + 2);
   return [min, max];
@@ -190,7 +190,7 @@ export default function TemperatureComparisonScatter() {
   if (glasshouseLoading || outdoorLoading) return <div className="card">Loading temperature correlation…</div>;
   if (glasshouseError || outdoorError) return <div className="card text-red-600">Temperature comparison unavailable</div>;
 
-  // โค้ดจะค้นหาทั้ง temp, temp1, temperature_2m ให้เองจากฟังก์ชัน parseValue ที่แก้ใหม่
+  // The updated parseValue function now auto-checks temp/temp1/temperature_2m
   const glasshouseSeries = normalizeSeries(historyData, "temp");
   const outdoorSeries = normalizeSeries(outdoorData, "temp");
   const chartData = matchNearestPoints(glasshouseSeries, outdoorSeries);
