@@ -86,10 +86,10 @@ export default function PlantLight() {
     ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
     : "bg-slate-100 text-slate-700 border border-slate-200";
 
-  if (hasError) return <div className="card text-red-600">Light status unavailable</div>;
-  if (isLoading) return <div className="card">Loading light status…</div>;
-  if (!activePlant) return <div className="card">Light is off until a new plant starts.</div>;
-  if (!light) return <div className="card text-red-600">Light data missing</div>;
+  if (hasError) return <div className="card h-full text-red-600">Light status unavailable</div>;
+  if (isLoading) return <div className="card h-full">Loading light status…</div>;
+  if (!activePlant) return <div className="card h-full">Light is off until a new plant starts.</div>;
+  if (!light) return <div className="card h-full text-red-600">Light data missing</div>;
 
   return (
     <div className="card relative h-full">

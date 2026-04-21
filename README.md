@@ -105,7 +105,6 @@ AutoGrow/
       page.tsx
       layout.tsx
       globals.css
-      api/mock/[[...slug]]/route.ts
     components/
       GrowthStatus.tsx
       LightStatus.tsx
@@ -337,15 +336,54 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 Frontend app:
 - `http://localhost:3000`
 
-## 3) Run frontend in mock mode (no backend/hardware)
+## 3) Run tests
+
+### Backend tests (pytest)
+
+```bash
+cd backend
+source .venv/bin/activate
+pip install -r requirements.txt
+python -m pytest
+```
+
+Run one backend test file:
+
+```bash
+cd backend
+source .venv/bin/activate
+python -m pytest tests/test_plants_router.py
+```
+
+Run one backend test function:
+
+```bash
+cd backend
+source .venv/bin/activate
+python -m pytest tests/test_plants_router.py::test_start_and_harvest_active_plant
+```
+
+### Frontend tests (Vitest + Testing Library)
 
 ```bash
 cd frontend
 npm install
-npm run dev:mock
+npm run test
 ```
 
-This uses Next.js mock routes under `/api/mock` and inline mock payloads in `frontend/lib/api.ts`.
+Run one frontend test file:
+
+```bash
+cd frontend
+npm run test -- tests/components/LightStatus.test.tsx
+```
+
+Run frontend coverage:
+
+```bash
+cd frontend
+npm run test:coverage
+```
 
 ## Seed and Import Utilities
 
@@ -378,7 +416,7 @@ PYTHONPATH=. python3 backend/scripts/import_targets_csv.py data/plant_targets.cs
 1. Start backend and frontend.
 2. Import or create plant types/targets.
 3. Start a plant session from the dashboard (`/plants/start`).
-4. Publish sensor payloads over MQTT or use mock mode.
+4. Publish sensor payloads over MQTT.
 5. Observe stage, health, ETA, and comparison charts.
 6. Harvest active plant when complete (`/plants/harvest-active`).
 

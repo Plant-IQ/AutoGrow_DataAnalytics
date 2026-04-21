@@ -29,9 +29,6 @@ export default function GrowthStatus() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
   const suggestRef = useRef<HTMLUListElement>(null);
-  
-  // +++ เพิ่ม State สำหรับจำ ID ต้นไม้ที่เพิ่งเก็บเกี่ยวไป (กัน Refresh แล้วค้าง) +++
-  const [harvestedId, setHarvestedId] = useState<number | null>(null);
 
   const { data: activePlant, isLoading: activeLoading, error: activeError } = useSWR<ActivePlant | null>(
     "/plants/active",
@@ -54,12 +51,6 @@ export default function GrowthStatus() {
       if (suggestRef.current && !suggestRef.current.contains(e.target as Node)) setShowSuggestions(false);
     };
     document.addEventListener("mousedown", handler);
-
-    const savedId = localStorage.getItem("harvested_plant_id");
-    if (savedId) {
-      setHarvestedId(parseInt(savedId, 10));
-    }
-
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
@@ -116,12 +107,6 @@ export default function GrowthStatus() {
         mutate("/health"),
       ]);
       setMessage("Harvest complete. Start a new plant when ready.");
-
-      if (activePlant) {
-        localStorage.setItem("harvested_plant_id", activePlant.id.toString());
-        setHarvestedId(activePlant.id);
-      }
-
     } catch (err: unknown) {
       setMessage(err instanceof Error ? err.message : "Could not harvest");
     } finally {
@@ -150,10 +135,6 @@ export default function GrowthStatus() {
       await Promise.all([mutate("/plants/active"), mutate("/stage"), mutate("/harvest-eta"), mutate("/plants/")]);
       setName(trimmed);
       setMessage("Started new grow session.");
-
-      localStorage.removeItem("harvested_plant_id");
-      setHarvestedId(null);
-
     } catch (err: unknown) {
       setMessage(err instanceof Error ? err.message : "Could not start grow");
     } finally {
@@ -166,10 +147,7 @@ export default function GrowthStatus() {
 
   const stageSafe = stage ?? { stage: 0, label: "", days_in_stage: 0 };
   const harvestSafe = harvest ?? { days_to_harvest: 0, projected_date: new Date(0).toISOString() };
-  
-  const isHarvestedUI = message === "Harvest complete. Start a new plant when ready.";
-  const isHarvestedLocal = Boolean(activePlant && harvestedId !== null && activePlant.id === harvestedId);
-  const hasActive = Boolean(activePlant && stage && harvest && stageSafe.stage !== -1 && !isHarvestedUI && !isHarvestedLocal);
+  const hasActive = Boolean(activePlant && stage && harvest && stageSafe.stage !== -1);
   
   const idx = hasActive ? Math.min(Math.max(stageSafe.stage, 0), 2) : 0;
   const stageName = hasActive ? stageSafe.label || STAGE_LABELS[idx] : "No active plant";

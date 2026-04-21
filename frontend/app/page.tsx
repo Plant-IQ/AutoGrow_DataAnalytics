@@ -26,7 +26,7 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-3">
             <div className="rounded-full border border-[color:var(--brand-primary)]/30 bg-[color:var(--brand-primary)]/10 px-3 py-1 text-sm font-medium text-[color:var(--brand-primary)]">
-              Live mock data
+              Live data
             </div>
           </div>
         </div>
