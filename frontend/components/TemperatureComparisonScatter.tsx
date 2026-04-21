@@ -196,7 +196,7 @@ export default function TemperatureComparisonScatter() {
   const chartData = matchNearestPoints(glasshouseSeries, outdoorSeries);
 
   if (glasshouseSeries.length === 0 || outdoorSeries.length === 0) {
-    return <div className="card">Glasshouse or outdoor temperature history is not available yet. (ไม่มีข้อมูลอุณหภูมิ)</div>;
+    return <div className="card">Glasshouse or outdoor temperature history is not available yet.</div>;
   }
 
   if (chartData.length === 0) {
