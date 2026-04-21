@@ -8,7 +8,6 @@ from typing import Optional, List
 
 from dotenv import load_dotenv
 from sqlalchemy import Column, JSON, UniqueConstraint, text
-from sqlalchemy.engine import URL
 from sqlmodel import Field, Session, SQLModel, create_engine, select
 
 ICT = timezone(timedelta(hours=7))
@@ -17,32 +16,32 @@ ICT = timezone(timedelta(hours=7))
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 DB_PATH = Path(os.getenv("SQLITE_PATH", BASE_DIR / "autogrow.db"))
+sqlite_url = f"sqlite:///{DB_PATH}"
 
+mysql_user = os.getenv("MYSQL_USER", "")
+mysql_pass = os.getenv("MYSQL_PASS", "")
+mysql_host = os.getenv("MYSQL_HOST", "")
+mysql_port = os.getenv("MYSQL_PORT", "3306")
+mysql_db = os.getenv("MYSQL_DB", "")
 
-import os
-from sqlmodel import create_engine, SQLModel, Session
-
-sqlite_file_name = "autogrow.db"
-sqlite_url = f"sqlite:///{sqlite_file_name}"
-
-mysql_user = "b6710545652"
-mysql_pass = "natcha.limsu@ku.th" 
-mysql_host = "iot.cpe.ku.ac.th"
-mysql_port = "3306"
-mysql_db   = "b6710545652"
-
-encoded_pass = urllib.parse.quote_plus(mysql_pass)
-
-mysql_url = f"mysql+pymysql://{mysql_user}:{encoded_pass}@{mysql_host}:{mysql_port}/{mysql_db}"
+if all([mysql_user, mysql_pass, mysql_host, mysql_port, mysql_db]):
+    encoded_pass = urllib.parse.quote_plus(mysql_pass)
+    mysql_url = f"mysql+pymysql://{mysql_user}:{encoded_pass}@{mysql_host}:{mysql_port}/{mysql_db}"
+else:
+    mysql_url = None
 
 engine = create_engine(sqlite_url, connect_args={"check_same_thread": False})
 
-mysql_engine = create_engine(
-    mysql_url,
-    pool_size=1,
-    max_overflow=0,
-    pool_recycle=60, 
-    pool_pre_ping=True,    
+mysql_engine = (
+    create_engine(
+        mysql_url,
+        pool_size=1,
+        max_overflow=0,
+        pool_recycle=60,
+        pool_pre_ping=True,
+    )
+    if mysql_url
+    else None
 )
 
 # --- Models (SQLite & MySQL) ---
