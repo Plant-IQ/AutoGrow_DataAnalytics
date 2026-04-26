@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import Session
+from datetime import date
 
 from db.sqlite import get_session
 from services.external_weather import get_outdoor_daily_avg, get_outdoor_history, get_weather_bundle
@@ -33,11 +34,19 @@ def outdoor_history(
     lat: float | None = Query(None, description="Latitude; defaults to env DEFAULT_LAT"),
     lon: float | None = Query(None, description="Longitude; defaults to env DEFAULT_LON"),
     past_days: int = Query(7, ge=1, le=14, description="How many recent days to include"),
+    start_date: date | None = Query(None, description="Optional historical start date (YYYY-MM-DD)"),
+    end_date: date | None = Query(None, description="Optional historical end date (YYYY-MM-DD)"),
     session: Session = Depends(get_session),
 ):
     try:
-        return get_outdoor_history(session, lat, lon, past_days=past_days)
+        if (start_date is None) != (end_date is None):
+            raise HTTPException(status_code=400, detail="start_date and end_date must be provided together")
+        if start_date and end_date and start_date > end_date:
+            raise HTTPException(status_code=400, detail="start_date must be on or before end_date")
+        return get_outdoor_history(session, lat, lon, past_days=past_days, start_date=start_date, end_date=end_date)
     except Exception as exc:  # noqa: BLE001
+        if isinstance(exc, HTTPException):
+            raise exc
         raise HTTPException(status_code=502, detail=str(exc))
 
 
@@ -50,9 +59,17 @@ def outdoor_daily_avg(
     lat: float | None = Query(None, description="Latitude; defaults to env DEFAULT_LAT"),
     lon: float | None = Query(None, description="Longitude; defaults to env DEFAULT_LON"),
     past_days: int = Query(7, ge=1, le=14, description="How many recent days to include"),
+    start_date: date | None = Query(None, description="Optional historical start date (YYYY-MM-DD)"),
+    end_date: date | None = Query(None, description="Optional historical end date (YYYY-MM-DD)"),
     session: Session = Depends(get_session),
 ):
     try:
-        return get_outdoor_daily_avg(session, lat, lon, past_days=past_days)
+        if (start_date is None) != (end_date is None):
+            raise HTTPException(status_code=400, detail="start_date and end_date must be provided together")
+        if start_date and end_date and start_date > end_date:
+            raise HTTPException(status_code=400, detail="start_date must be on or before end_date")
+        return get_outdoor_daily_avg(session, lat, lon, past_days=past_days, start_date=start_date, end_date=end_date)
     except Exception as exc:  # noqa: BLE001
+        if isinstance(exc, HTTPException):
+            raise exc
         raise HTTPException(status_code=502, detail=str(exc))

@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 import os
 from collections import defaultdict
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Optional
 import httpx
 from sqlmodel import Session, select
@@ -168,6 +168,36 @@ def fetch_open_meteo_history(lat: float, lon: float, past_days: int = 7) -> dict
               for ts, t, h in zip(hourly.get("time", []), hourly.get("temperature_2m", []), hourly.get("relative_humidity_2m", []))]
     return {"source": "open-meteo", "lat": lat, "lon": lon, "points": points, "fetched_at": _now_utc().isoformat()}
 
+def fetch_open_meteo_history_range(lat: float, lon: float, start_date: date, end_date: date) -> dict:
+    url = "https://archive-api.open-meteo.com/v1/archive"
+    params = {
+        "latitude": lat,
+        "longitude": lon,
+        "hourly": "temperature_2m,relative_humidity_2m",
+        "start_date": start_date.isoformat(),
+        "end_date": end_date.isoformat(),
+        "timezone": "UTC",
+    }
+    with httpx.Client(timeout=15) as client:
+        resp = client.get(url, params=params)
+        resp.raise_for_status()
+        raw = resp.json()
+
+    hourly = raw.get("hourly", {})
+    points = [
+        {"ts": ts, "temp": t, "humidity": h}
+        for ts, t, h in zip(hourly.get("time", []), hourly.get("temperature_2m", []), hourly.get("relative_humidity_2m", []))
+    ]
+    return {
+        "source": "open-meteo",
+        "lat": lat,
+        "lon": lon,
+        "points": points,
+        "start_date": start_date.isoformat(),
+        "end_date": end_date.isoformat(),
+        "fetched_at": _now_utc().isoformat(),
+    }
+
 
 def get_weather_bundle(session: Session, lat: Optional[float] = None, lon: Optional[float] = None) -> dict:
     lat, lon = lat or DEFAULT_LAT, lon or DEFAULT_LON
@@ -183,21 +213,46 @@ def get_weather_bundle(session: Session, lat: Optional[float] = None, lon: Optio
     
     return _cache_set(session, key, data)
 
-def get_outdoor_history(session: Session, lat: Optional[float] = None, lon: Optional[float] = None, past_days: int = 7) -> dict:
+def get_outdoor_history(
+    session: Session,
+    lat: Optional[float] = None,
+    lon: Optional[float] = None,
+    past_days: int = 7,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+) -> dict:
     lat, lon = lat or DEFAULT_LAT, lon or DEFAULT_LON
-    key = f"outdoor-history:{lat:.3f}:{lon:.3f}:{past_days}"
-    
+
+    if (start_date is None) != (end_date is None):
+        raise ValueError("start_date and end_date must be provided together")
+
+    if start_date and end_date:
+        key = f"outdoor-history:{lat:.3f}:{lon:.3f}:{start_date.isoformat()}:{end_date.isoformat()}"
+    else:
+        key = f"outdoor-history:{lat:.3f}:{lon:.3f}:{past_days}"
+
     cached = _cache_get(session, key)
     if cached:
         _sync_weather_history_to_mysql(cached)
         return cached
-    
-    data = fetch_open_meteo_history(lat, lon, past_days=past_days)
+
+    if start_date and end_date:
+        data = fetch_open_meteo_history_range(lat, lon, start_date=start_date, end_date=end_date)
+    else:
+        data = fetch_open_meteo_history(lat, lon, past_days=past_days)
+
     _sync_weather_history_to_mysql(data)
     return _cache_set(session, key, data)
 
-def get_outdoor_daily_avg(session: Session, lat: Optional[float], lon: Optional[float], past_days: int = 7) -> dict:
-    history = get_outdoor_history(session, lat, lon, past_days=past_days)
+def get_outdoor_daily_avg(
+    session: Session,
+    lat: Optional[float],
+    lon: Optional[float],
+    past_days: int = 7,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+) -> dict:
+    history = get_outdoor_history(session, lat, lon, past_days=past_days, start_date=start_date, end_date=end_date)
     grouped = defaultdict(lambda: {"temp_sum": 0.0, "humidity_sum": 0.0, "count": 0.0})
     
     for pt in history.get("points", []):
